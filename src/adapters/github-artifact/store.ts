@@ -41,11 +41,12 @@ export class GitHubArtifactStore implements ArtifactStore {
     const options = this.context.retentionDays === undefined
       ? undefined
       : { retentionDays: this.context.retentionDays }
+    const name = snapshotArtifactName(
+      snapshot.identity.projectId,
+      snapshot.identity.commitSha,
+    )
     const response = await this.client.uploadArtifact(
-      snapshotArtifactName(
-        snapshot.identity.projectId,
-        snapshot.identity.commitSha,
-      ),
+      name,
       [snapshotPath],
       root,
       options,
@@ -56,6 +57,8 @@ export class GitHubArtifactStore implements ArtifactStore {
 
     return {
       id: response.id,
+      name,
+      snapshotPath,
       ...(response.digest === undefined ? {} : { digest: response.digest }),
       url: `${this.context.serverUrl}/${this.context.repository}/actions/runs/${this.context.runId}/artifacts/${response.id}`,
     }

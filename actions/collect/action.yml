@@ -22,10 +22,14 @@ inputs:
 outputs:
   artifact-id:
     description: Uploaded snapshot Artifact ID.
+  artifact-name:
+    description: Uploaded snapshot Artifact name, suitable for actions/download-artifact.
   artifact-url:
     description: Browser URL for the snapshot Artifact.
   artifact-digest:
     description: SHA-256 digest returned by GitHub Artifact storage.
+  snapshot-path:
+    description: Absolute path to snapshot.json on the current runner.
   capabilities:
     description: JSON array of collected metric capabilities.
 runs:

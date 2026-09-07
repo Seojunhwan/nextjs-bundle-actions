@@ -13,7 +13,13 @@ class MemoryArtifactStore implements ArtifactStore {
 
   async saveSnapshot(snapshot: BundleSnapshot): Promise<ArtifactReference> {
     this.saved.push(snapshot)
-    return { id: 42, url: 'https://github.example/artifacts/42', digest: 'sha256:abc' }
+    return {
+      id: 42,
+      name: 'next-bundle-snapshot--web--abc123--v1',
+      snapshotPath: '/tmp/snapshot.json',
+      url: 'https://github.example/artifacts/42',
+      digest: 'sha256:abc',
+    }
   }
 }
 

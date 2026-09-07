@@ -4,6 +4,8 @@ import type { CollectOptions } from './collect.js'
 
 export interface ArtifactReference {
   id: number
+  name: string
+  snapshotPath: string
   url: string
   digest?: string
 }

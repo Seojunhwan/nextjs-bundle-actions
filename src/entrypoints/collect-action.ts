@@ -52,8 +52,10 @@ export async function main(): Promise<void> {
   }, { artifactStore: store })
 
   core.setOutput('artifact-id', outcome.artifact.id)
+  core.setOutput('artifact-name', outcome.artifact.name)
   core.setOutput('artifact-url', outcome.artifact.url)
   core.setOutput('artifact-digest', outcome.artifact.digest ?? '')
+  core.setOutput('snapshot-path', outcome.artifact.snapshotPath)
   core.setOutput('capabilities', JSON.stringify(outcome.snapshot.capabilities))
   for (const diagnostic of outcome.snapshot.diagnostics) {
     core.warning(diagnostic)
