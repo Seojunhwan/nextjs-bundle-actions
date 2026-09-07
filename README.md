@@ -48,8 +48,8 @@ Artifact로 저장합니다.
 이 저장소가 private인 동안에는 Action 저장소의 **Settings → Actions →
 General → Access**에서 사용하는 private 저장소에 접근을 허용해야 합니다.
 
-아래 예시의 `@v1`은 배포한 immutable tag 또는 commit SHA로 교체하는 것을
-권장합니다.
+아래 예시는 GitHub-hosted E2E로 검증한 immutable commit SHA를 사용합니다.
+릴리스 tag를 운영하게 되면 조직의 version 정책에 맞춰 교체할 수 있습니다.
 
 ### 2. 빌드 후 snapshot 수집
 
@@ -85,7 +85,7 @@ jobs:
       - run: pnpm build
 
       - id: bundle
-        uses: Seojunhwan/nextjs-bundle-actions/actions/collect@v1
+        uses: Seojunhwan/nextjs-bundle-actions/actions/collect@8cd3bb7eb5a519c040b7f6ec19c7e826e67c0aab
         with:
           build-path: .next
           project-id: web
@@ -117,7 +117,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: Seojunhwan/nextjs-bundle-actions/actions/report@v1
+      - uses: Seojunhwan/nextjs-bundle-actions/actions/report@8cd3bb7eb5a519c040b7f6ec19c7e826e67c0aab
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           project-id: web
@@ -169,7 +169,7 @@ report Action을 사용하지 않아도 표준 `snapshot.json`을 사용자 코�
 
 ```yaml
 - id: bundle
-  uses: Seojunhwan/nextjs-bundle-actions/actions/collect@v1
+  uses: Seojunhwan/nextjs-bundle-actions/actions/collect@8cd3bb7eb5a519c040b7f6ec19c7e826e67c0aab
   with:
     build-path: apps/web/.next
     project-id: web
@@ -199,7 +199,7 @@ jobs:
       - uses: actions/checkout@v7
       # install과 build step은 생략
       - id: bundle
-        uses: Seojunhwan/nextjs-bundle-actions/actions/collect@v1
+        uses: Seojunhwan/nextjs-bundle-actions/actions/collect@8cd3bb7eb5a519c040b7f6ec19c7e826e67c0aab
         with:
           build-path: apps/web/.next
           project-id: web
@@ -226,7 +226,7 @@ jobs:
 ```yaml
 - run: pnpm turbo run build --filter=storefront
 - id: storefront-bundle
-  uses: Seojunhwan/nextjs-bundle-actions/actions/collect@v1
+  uses: Seojunhwan/nextjs-bundle-actions/actions/collect@8cd3bb7eb5a519c040b7f6ec19c7e826e67c0aab
   with:
     build-path: apps/storefront/.next
     project-id: storefront
