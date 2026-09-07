@@ -99,6 +99,7 @@ export async function collectAppRouterBuild(
     if (typeof publicRoute !== 'string') {
       throw new Error(`Invalid public route for ${internalRoute}`)
     }
+    if (!internalRoute.endsWith('/page')) continue
     if (publicRoute === '/_not-found' || publicRoute === '/_global-error') continue
 
     const manifestPath = resolve(

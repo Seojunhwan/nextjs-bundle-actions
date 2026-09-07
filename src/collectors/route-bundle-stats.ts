@@ -110,16 +110,18 @@ export async function collectRouteBundleStats(
   const appManifestPath = resolve(buildPath, 'app-path-routes-manifest.json')
   const hasAppRoutes = await exists(appManifestPath)
   const appRouteSet = new Set<string>()
+  const appNonPageRouteSet = new Set<string>()
   if (hasAppRoutes) {
     const routeMap = JSON.parse(await readFile(appManifestPath, 'utf8')) as unknown
     if (!routeMap || typeof routeMap !== 'object' || Array.isArray(routeMap)) {
       throw new Error('app-path-routes-manifest.json must contain an object')
     }
-    for (const route of Object.values(routeMap)) {
+    for (const [internalRoute, route] of Object.entries(routeMap)) {
       if (typeof route !== 'string') {
         throw new Error('Invalid route in app-path-routes-manifest.json')
       }
-      appRouteSet.add(route)
+      if (internalRoute.endsWith('/page')) appRouteSet.add(route)
+      else appNonPageRouteSet.add(route)
     }
   }
   const pageRouteSet = new Set(
@@ -144,7 +146,11 @@ export async function collectRouteBundleStats(
     ) {
       throw new Error('Invalid route entry in route-bundle-stats.json')
     }
-    if (INTERNAL_ROUTES.has(rawStat.route) || rawStat.route.startsWith('/api/')) {
+    if (
+      INTERNAL_ROUTES.has(rawStat.route) ||
+      rawStat.route.startsWith('/api/') ||
+      appNonPageRouteSet.has(rawStat.route)
+    ) {
       continue
     }
 
