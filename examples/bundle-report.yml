@@ -1,0 +1,22 @@
+name: Next.js Bundle Report
+
+on:
+  workflow_run:
+    workflows: [Next.js Bundle Snapshot]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+
+jobs:
+  report:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Seojunhwan/nextjs-bundle-actions/actions/report@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          project-id: web
+          config-path: .github/nextjs-bundle-actions.yml

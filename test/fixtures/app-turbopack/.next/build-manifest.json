@@ -1,0 +1,5 @@
+{
+  "polyfillFiles": ["static/chunks/polyfill.js"],
+  "rootMainFiles": [],
+  "pages": {"/_app": []}
+}

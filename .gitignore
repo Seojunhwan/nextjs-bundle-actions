@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+dist/
+!actions/collect/dist/
+!actions/collect/dist/**
+!actions/report/dist/
+!actions/report/dist/**
+*.tgz

@@ -1,0 +1,11 @@
+{
+  "polyfillFiles": ["static/chunks/polyfill.js"],
+  "rootMainFiles": ["static/chunks/root.js"],
+  "pages": {
+    "/_app": ["static/chunks/framework.js"],
+    "/legacy": [
+      "static/chunks/framework.js",
+      "static/chunks/pages/legacy.js"
+    ]
+  }
+}

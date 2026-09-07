@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/products/[id]/page"]={"clientModules":{"app/product.tsx":{"chunks":["3","static/chunks/app/products/%5Bid%5D/page-c3.js"]},"app/home.tsx":{"chunks":["1","static/chunks/app/page-a1.js"]}}};
