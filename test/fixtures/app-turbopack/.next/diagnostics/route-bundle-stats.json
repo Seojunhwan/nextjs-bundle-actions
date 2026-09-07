@@ -1,0 +1,23 @@
+[
+  {
+    "route": "/",
+    "firstLoadUncompressedJsBytes": 15,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/shared.js",
+      ".next/static/chunks/home.js"
+    ]
+  },
+  {
+    "route": "/products/[id]",
+    "firstLoadUncompressedJsBytes": 18,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/shared.js",
+      ".next/static/chunks/product.js"
+    ]
+  },
+  {
+    "route": "/_not-found",
+    "firstLoadUncompressedJsBytes": 10,
+    "firstLoadChunkPaths": [".next/static/chunks/shared.js"]
+  }
+]

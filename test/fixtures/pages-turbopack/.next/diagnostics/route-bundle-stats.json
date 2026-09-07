@@ -1,0 +1,10 @@
+[
+  {
+    "route": "/",
+    "firstLoadUncompressedJsBytes": 11,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/shared.js",
+      ".next/static/chunks/home.js"
+    ]
+  }
+]

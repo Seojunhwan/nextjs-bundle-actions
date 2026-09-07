@@ -1,0 +1,11 @@
+{
+  "polyfillFiles": [],
+  "lowPriorityFiles": [
+    "static/build/_buildManifest.js",
+    "static/build/_ssgManifest.js"
+  ],
+  "pages": {
+    "/_app": ["static/chunks/shared.js"],
+    "/": ["static/chunks/home.js"]
+  }
+}

@@ -1,0 +1,37 @@
+name: Next.js Bundle Snapshot - Collect
+description: Collect a normalized Next.js client bundle snapshot after a user-managed build.
+inputs:
+  build-path:
+    description: Path to the completed Next.js build directory.
+    required: false
+    default: .next
+  project-id:
+    description: Stable identifier for one Next.js app in the repository.
+    required: false
+    default: default
+  commit-sha:
+    description: Commit represented by the build. Defaults to the PR head SHA or GITHUB_SHA.
+    required: false
+  retention-days:
+    description: Optional Artifact retention override. Empty uses repository policy.
+    required: false
+  strict:
+    description: Fail instead of storing asset-only diagnostics for an unsupported output format.
+    required: false
+    default: "false"
+outputs:
+  artifact-id:
+    description: Uploaded snapshot Artifact ID.
+  artifact-name:
+    description: Uploaded snapshot Artifact name, suitable for actions/download-artifact.
+  artifact-url:
+    description: Browser URL for the snapshot Artifact.
+  artifact-digest:
+    description: SHA-256 digest returned by GitHub Artifact storage.
+  snapshot-path:
+    description: Absolute path to snapshot.json on the current runner.
+  capabilities:
+    description: JSON array of collected metric capabilities.
+runs:
+  using: node24
+  main: dist/index.js

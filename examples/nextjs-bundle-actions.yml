@@ -1,0 +1,8 @@
+version: 1
+projects:
+  web:
+    topN: 20
+    budgets:
+      maxGzipBytes: 180000
+      maxGzipDeltaBytes: 8192
+      maxGzipDeltaPercentage: 5

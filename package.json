@@ -1,0 +1,32 @@
+{
+  "name": "nextjs-bundle-actions",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm build:collect && pnpm build:report",
+    "build:collect": "ncc build src/entrypoints/collect-action.ts -o actions/collect/dist --minify --source-map",
+    "build:report": "ncc build src/entrypoints/report-action.ts -o actions/report/dist --minify --source-map",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:lab": "vitest run test/integration/real-next-output.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "@vercel/ncc": "^0.45.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
+  },
+  "dependencies": {
+    "@actions/artifact": "^6.2.1",
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "yaml": "^2.9.0",
+    "zod": "^4.5.4"
+  }
+}

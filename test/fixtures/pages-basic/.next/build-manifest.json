@@ -1,0 +1,14 @@
+{
+  "polyfillFiles": ["static/chunks/polyfill.js"],
+  "lowPriorityFiles": ["static/build/_buildManifest.js", "static/build/style.css"],
+  "pages": {
+    "/_app": [
+      "static/chunks/framework.js",
+      "static/chunks/pages/_app.js"
+    ],
+    "/": [
+      "static/chunks/framework.js",
+      "static/chunks/pages/index.js"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "/page": "/",
+  "/dashboard/page": "/dashboard",
+  "/products/[id]/page": "/products/[id]",
+  "/favicon.ico/route": "/favicon.ico"
+}

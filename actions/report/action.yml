@@ -1,0 +1,33 @@
+name: Next.js Bundle Snapshot - Report
+description: Compare trusted Next.js bundle snapshots and maintain a pull request comment.
+inputs:
+  github-token:
+    description: Token with Actions read and pull requests write permissions.
+    required: true
+  project-id:
+    description: Stable identifier matching the collect step.
+    required: false
+    default: default
+  config-path:
+    description: Optional YAML or JSON config read from the pull request base SHA.
+    required: false
+  top-n:
+    description: Maximum number of changed routes shown in the comment.
+    required: false
+  max-gzip-bytes:
+    description: Optional maximum estimated gzip bytes for each route.
+    required: false
+  max-gzip-delta-bytes:
+    description: Optional maximum estimated gzip increase for each route.
+    required: false
+  max-gzip-delta-percentage:
+    description: Optional maximum estimated gzip percentage increase for each route.
+    required: false
+outputs:
+  status:
+    description: reported or baseline-missing.
+  violations:
+    description: JSON array of bundle budget violations.
+runs:
+  using: node24
+  main: dist/index.js
