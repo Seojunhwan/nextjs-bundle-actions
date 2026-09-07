@@ -29,7 +29,7 @@ jobs:
       - run: pnpm build
 
       - id: bundle
-        uses: Seojunhwan/nextjs-bundle-actions/actions/collect@v1
+        uses: Seojunhwan/nextjs-bundle-actions/actions/collect@8cd3bb7eb5a519c040b7f6ec19c7e826e67c0aab
         with:
           build-path: .next
           project-id: web
