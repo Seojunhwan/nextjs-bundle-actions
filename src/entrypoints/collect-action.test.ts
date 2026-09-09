@@ -57,7 +57,7 @@ describe('collect Action outputs', () => {
     await import('./collect-action.js')
     await vi.waitFor(() => expect(action.setOutput).toHaveBeenCalledWith(
       'artifact-name',
-      'next-bundle-snapshot--web--abc123--v1',
+      'next-bundle-snapshot--web--abc123--v2',
     ))
 
     const snapshotPath = action.setOutput.mock.calls.find(

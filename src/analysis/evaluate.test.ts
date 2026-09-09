@@ -33,6 +33,7 @@ const diff: BundleDiff = {
       gzipDeltaPercentage: null,
     },
   ],
+  deferredRoutes: [],
   diagnostics: [],
 }
 

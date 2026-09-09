@@ -24,3 +24,18 @@ export function selectExactArtifact(
     )
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0]
 }
+
+export function selectVersionedArtifact(
+  artifacts: RepositoryArtifact[],
+  expected: { names: string[]; sha: string; branch: string },
+): RepositoryArtifact | undefined {
+  for (const name of expected.names) {
+    const selected = selectExactArtifact(artifacts, {
+      name,
+      sha: expected.sha,
+      branch: expected.branch,
+    })
+    if (selected) return selected
+  }
+  return undefined
+}

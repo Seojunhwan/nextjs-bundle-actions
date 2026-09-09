@@ -42,9 +42,14 @@ function mergeBuilds(
       ...app.environment,
       routers: ['app', 'pages'],
     },
-    capabilities: app.capabilities.filter((capability) =>
-      pages.capabilities.includes(capability),
-    ),
+    capabilities: [
+      ...app.capabilities.filter((capability) =>
+        pages.capabilities.includes(capability),
+      ),
+      ...app.capabilities.filter((capability) =>
+        capability === 'route.deferredAssets.v1',
+      ),
+    ],
     assets: [...assets.values()],
     routes,
     diagnostics: [...app.diagnostics, ...pages.diagnostics],

@@ -19,6 +19,10 @@ function signedBytes(value: number): string {
   return `${value > 0 ? '+' : ''}${bytes(value)}`
 }
 
+function signedOptionalBytes(value: number | null): string {
+  return value === null ? '—' : signedBytes(value)
+}
+
 function percentage(value: number | null): string {
   if (value === null) return '—'
   return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`
@@ -53,6 +57,22 @@ export function renderComment({
     (route) =>
       `| \`${escapeCell(route.path)}\` | ${route.status} | ${bytes(route.headGzipBytes)} | ${signedBytes(route.gzipDeltaBytes)} | ${percentage(route.gzipDeltaPercentage)} |`,
   )
+  const deferredRoutes = diff.deferredRoutes
+    .filter((route) =>
+      route.status !== 'unchanged' &&
+      ((route.baseGzipBytes ?? 0) > 0 || (route.headGzipBytes ?? 0) > 0),
+    )
+    .sort(
+      (left, right) =>
+        Number(left.status === 'unavailable') - Number(right.status === 'unavailable') ||
+        Math.abs(right.gzipDeltaBytes ?? 0) - Math.abs(left.gzipDeltaBytes ?? 0) ||
+        left.path.localeCompare(right.path),
+    )
+    .slice(0, Math.max(0, topN))
+  const deferredRows = deferredRoutes.map(
+    (route) =>
+      `| \`${escapeCell(route.path)}\` | ${route.status} | ${route.headAssetCount ?? '—'} | ${bytes(route.headGzipBytes)} | ${signedOptionalBytes(route.gzipDeltaBytes)} | ${percentage(route.gzipDeltaPercentage)} |`,
+  )
   const violationLines = evaluation.violations.map(
     (violation) =>
       `- \`${escapeCell(violation.path)}\`: ${violation.rule} ${violation.actual} > ${violation.limit}`,
@@ -70,6 +90,16 @@ export function renderComment({
     '| Route | Status | Head gzip | Δ gzip | Δ |',
     '| --- | --- | ---: | ---: | ---: |',
     ...(routeRows.length > 0 ? routeRows : ['| — | unchanged | — | — | — |']),
+    ...(deferredRows.length > 0
+      ? [
+          '',
+          '### Deferred client JS',
+          '',
+          '| Route | Status | Dynamic assets | Head gzip | Δ gzip | Δ |',
+          '| --- | --- | ---: | ---: | ---: | ---: |',
+          ...deferredRows,
+        ]
+      : []),
     ...(violationLines.length > 0
       ? ['', '### Budget violations', '', ...violationLines]
       : []),

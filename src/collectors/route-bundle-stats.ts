@@ -7,6 +7,7 @@ import type {
   CollectedBuild,
   CollectedRoute,
 } from '../contracts/index.js'
+import { collectAppDeferredAssets } from './app-deferred-assets.js'
 import { readBuildEnvironment } from './environment.js'
 
 interface RouteBundleStat {
@@ -109,7 +110,7 @@ export async function collectRouteBundleStats(
   ).filter((asset) => asset.endsWith('.js'))
   const appManifestPath = resolve(buildPath, 'app-path-routes-manifest.json')
   const hasAppRoutes = await exists(appManifestPath)
-  const appRouteSet = new Set<string>()
+  const appRouteMap = new Map<string, string>()
   const appNonPageRouteSet = new Set<string>()
   if (hasAppRoutes) {
     const routeMap = JSON.parse(await readFile(appManifestPath, 'utf8')) as unknown
@@ -120,7 +121,7 @@ export async function collectRouteBundleStats(
       if (typeof route !== 'string') {
         throw new Error('Invalid route in app-path-routes-manifest.json')
       }
-      if (internalRoute.endsWith('/page')) appRouteSet.add(route)
+      if (internalRoute.endsWith('/page')) appRouteMap.set(route, internalRoute)
       else appNonPageRouteSet.add(route)
     }
   }
@@ -159,7 +160,7 @@ export async function collectRouteBundleStats(
       'firstLoadChunkPaths',
     ).map((asset) => normalizeAssetId(buildPath, asset))
     measuredAssetsByRoute.set(rawStat.route, measuredAssets)
-    const isAppRoute = appRouteSet.has(rawStat.route)
+    const isAppRoute = appRouteMap.has(rawStat.route)
     const isPagesRoute = pageRouteSet.has(rawStat.route)
     if (isAppRoute && isPagesRoute) {
       throw new Error(`Route is present in both App and Pages Router: ${rawStat.route}`)
@@ -173,11 +174,34 @@ export async function collectRouteBundleStats(
           ...(isPagesRoute ? lowPriorityFiles : []),
         ]),
       ],
+      deferredAssets: isAppRoute ? [] : null,
     })
     expectedRawBytes.set(rawStat.route, rawStat.firstLoadUncompressedJsBytes)
   }
 
-  const assetIds = [...new Set(routes.flatMap((route) => route.initialAssets))]
+  const appRouteEvidence = routes.flatMap((route) => {
+    const internalRoute = appRouteMap.get(route.path)
+    return internalRoute
+      ? [{
+          internalRoute,
+          publicRoute: route.path,
+          initialAssets: route.initialAssets,
+          clientModules: {},
+        }]
+      : []
+  })
+  if (appRouteEvidence.length > 0) {
+    const deferred = await collectAppDeferredAssets(buildPath, appRouteEvidence)
+    for (const route of routes) {
+      if (route.deferredAssets !== null) {
+        route.deferredAssets = deferred.byRoute.get(route.path) ?? []
+      }
+    }
+  }
+  const assetIds = [...new Set(routes.flatMap((route) => [
+    ...route.initialAssets,
+    ...(route.deferredAssets ?? []),
+  ]))]
   const assets: AssetFact[] = await Promise.all(
     assetIds.map(async (id) => {
       const content = await readFile(safeAssetPath(buildPath, id))
@@ -214,6 +238,11 @@ export async function collectRouteBundleStats(
       `route-bundle-stats.json excludes Pages document manifests; ${lowPriorityFiles.length} low-priority asset${lowPriorityFiles.length === 1 ? ' was' : 's were'} added to Pages routes.`,
     )
   }
+  if (pageRouteSet.size > 0) {
+    diagnostics.push(
+      'Deferred client JavaScript metrics are unavailable for Pages Router routes.',
+    )
+  }
 
   return {
     environment: await readBuildEnvironment(buildPath, routers),
@@ -221,6 +250,7 @@ export async function collectRouteBundleStats(
       'asset.rawBytes.v1',
       'asset.gzipBytes.v1',
       'route.initialAssets.v1',
+      ...(appRouteEvidence.length > 0 ? ['route.deferredAssets.v1'] : []),
     ],
     assets,
     routes,
