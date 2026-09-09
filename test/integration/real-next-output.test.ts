@@ -18,10 +18,26 @@ describe('real Next.js 16.2.3 outputs', () => {
       expect(snapshot.environment.bundler).toBe('webpack')
       expect(Object.fromEntries(snapshot.routes.map((route) => [route.path, route.rawBytes])))
         .toEqual({
-          '/': 538_138,
-          '/dashboard': 538_148,
-          '/products/[id]': 537_936,
+          '/': 538_250,
+          '/dashboard': 541_680,
+          '/products/[id]': 538_048,
         })
+      expect(Object.fromEntries(snapshot.routes.map((route) => [
+        route.path,
+        {
+          assets: route.deferredAssets,
+          rawBytes: route.deferredRawBytes,
+          gzipBytes: route.deferredGzipBytes,
+        },
+      ]))).toEqual({
+        '/': { assets: [], rawBytes: 0, gzipBytes: 0 },
+        '/dashboard': {
+          assets: ['static/chunks/41.d1548a2908bf71fb.js'],
+          rawBytes: 423,
+          gzipBytes: 331,
+        },
+        '/products/[id]': { assets: [], rawBytes: 0, gzipBytes: 0 },
+      })
     },
   )
 
@@ -35,9 +51,25 @@ describe('real Next.js 16.2.3 outputs', () => {
       expect(Object.fromEntries(snapshot.routes.map((route) => [route.path, route.rawBytes])))
         .toEqual({
           '/': 626_733,
-          '/dashboard': 626_743,
+          '/dashboard': 630_115,
           '/products/[id]': 626_573,
         })
+      expect(Object.fromEntries(snapshot.routes.map((route) => [
+        route.path,
+        {
+          assets: route.deferredAssets,
+          rawBytes: route.deferredRawBytes,
+          gzipBytes: route.deferredGzipBytes,
+        },
+      ]))).toEqual({
+        '/': { assets: [], rawBytes: 0, gzipBytes: 0 },
+        '/dashboard': {
+          assets: ['static/chunks/17ho0lpvwqk6-.js'],
+          rawBytes: 484,
+          gzipBytes: 371,
+        },
+        '/products/[id]': { assets: [], rawBytes: 0, gzipBytes: 0 },
+      })
     },
   )
 

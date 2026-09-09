@@ -35,7 +35,7 @@ describe('GitHubArtifactStore', () => {
     expect(files[0]).toBe(join(root, 'snapshot.json'))
     expect(reference).toEqual({
       id: 42,
-      name: 'next-bundle-snapshot--web--abc123--v1',
+      name: 'next-bundle-snapshot--web--abc123--v2',
       snapshotPath: join(root, 'snapshot.json'),
       digest: 'sha256:abc',
       url: 'https://github.com/acme/storefront/actions/runs/99/artifacts/42',

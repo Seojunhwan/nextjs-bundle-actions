@@ -29,6 +29,13 @@ export function measure(
       (asset) => referenceCounts.get(asset.id) === 1,
     )
     const shared = assets.filter((asset) => (referenceCounts.get(asset.id) ?? 0) > 1)
+    const deferred = route.deferredAssets === null
+      ? null
+      : route.deferredAssets.map((assetId) => {
+          const asset = assetsById.get(assetId)
+          if (!asset) throw new Error(`Missing measured asset: ${assetId}`)
+          return asset
+        })
 
     return {
       ...route,
@@ -44,6 +51,14 @@ export function measure(
       ),
       sharedRawBytes: shared.reduce((sum, asset) => sum + asset.rawBytes, 0),
       sharedGzipBytes: shared.reduce((sum, asset) => sum + asset.gzipBytes, 0),
+      deferredRawBytes: deferred?.reduce(
+        (sum, asset) => sum + asset.rawBytes,
+        0,
+      ) ?? null,
+      deferredGzipBytes: deferred?.reduce(
+        (sum, asset) => sum + asset.gzipBytes,
+        0,
+      ) ?? null,
     }
   })
 

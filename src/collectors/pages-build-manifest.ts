@@ -84,6 +84,7 @@ export async function collectPagesBuild(
             ...lowPriorityAssets,
           ]),
         ],
+        deferredAssets: null,
       }
     },
     )
@@ -109,6 +110,8 @@ export async function collectPagesBuild(
     ],
     assets,
     routes,
-    diagnostics: [],
+    diagnostics: [
+      'Deferred client JavaScript metrics are unavailable for Pages Router routes.',
+    ],
   }
 }

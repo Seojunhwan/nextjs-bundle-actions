@@ -21,9 +21,13 @@ describe('collect', () => {
       commitSha: 'abc123',
     })
     expect(snapshot.environment.routers).toEqual(['pages'])
+    expect(snapshot.capabilities).not.toContain('route.deferredAssets.v1')
     expect(snapshot.routes).toEqual([
       expect.objectContaining({
         path: '/',
+        deferredAssets: null,
+        deferredRawBytes: null,
+        deferredGzipBytes: null,
         initialAssets: [
           'static/chunks/polyfill.js',
           'static/chunks/framework.js',
@@ -34,5 +38,8 @@ describe('collect', () => {
         rawBytes: 29,
       }),
     ])
+    expect(snapshot.diagnostics).toContain(
+      'Deferred client JavaScript metrics are unavailable for Pages Router routes.',
+    )
   })
 })

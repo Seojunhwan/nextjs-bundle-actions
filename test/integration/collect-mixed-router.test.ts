@@ -20,11 +20,27 @@ describe('collect mixed router build', () => {
       '/app-home',
       '/legacy',
     ])
+    expect(snapshot.capabilities).toContain('route.deferredAssets.v1')
+    expect(snapshot.routes.find((route) => route.path === '/app-home'))
+      .toMatchObject({
+        deferredAssets: [],
+        deferredRawBytes: 0,
+        deferredGzipBytes: 0,
+      })
     expect(snapshot.routes.find((route) => route.path === '/legacy')?.initialAssets)
       .toEqual([
         'static/chunks/polyfill.js',
         'static/chunks/framework.js',
         'static/chunks/pages/legacy.js',
       ])
+    expect(snapshot.routes.find((route) => route.path === '/legacy'))
+      .toMatchObject({
+        deferredAssets: null,
+        deferredRawBytes: null,
+        deferredGzipBytes: null,
+      })
+    expect(snapshot.diagnostics).toContain(
+      'Deferred client JavaScript metrics are unavailable for Pages Router routes.',
+    )
   })
 })

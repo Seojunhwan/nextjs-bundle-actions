@@ -20,6 +20,8 @@ describe('collect App Router build', () => {
       bundler: 'webpack',
       routers: ['app'],
     })
+    expect(snapshot.schemaVersion).toBe(2)
+    expect(snapshot.capabilities).toContain('route.deferredAssets.v1')
     expect(snapshot.routes.map(({ path, rawBytes, initialAssets }) => ({
       path,
       rawBytes,
@@ -51,6 +53,31 @@ describe('collect App Router build', () => {
           'static/chunks/polyfill.js',
           'static/chunks/app/products/[id]/page-c3.js',
         ],
+      },
+    ])
+    expect(snapshot.routes.map((route) => ({
+      path: route.path,
+      deferredAssets: route.deferredAssets,
+      deferredRawBytes: route.deferredRawBytes,
+      deferredGzipBytes: route.deferredGzipBytes,
+    }))).toEqual([
+      {
+        path: '/',
+        deferredAssets: [],
+        deferredRawBytes: 0,
+        deferredGzipBytes: 0,
+      },
+      {
+        path: '/dashboard',
+        deferredAssets: ['static/chunks/deferred-dashboard.js'],
+        deferredRawBytes: 9,
+        deferredGzipBytes: 29,
+      },
+      {
+        path: '/products/[id]',
+        deferredAssets: [],
+        deferredRawBytes: 0,
+        deferredGzipBytes: 0,
       },
     ])
   })

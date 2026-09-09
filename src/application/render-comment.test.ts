@@ -19,6 +19,24 @@ const diff: BundleDiff = {
       baseGzipBytes: 10, headGzipBytes: 9, gzipDeltaBytes: -1, gzipDeltaPercentage: -10,
     },
   ],
+  deferredRoutes: [
+    {
+      path: '/checkout', status: 'changed',
+      baseAssetCount: 1, headAssetCount: 2,
+      baseRawBytes: 80, headRawBytes: 120,
+      rawDeltaBytes: 40, rawDeltaPercentage: 50,
+      baseGzipBytes: 30, headGzipBytes: 45,
+      gzipDeltaBytes: 15, gzipDeltaPercentage: 50,
+    },
+    {
+      path: '/new-lazy', status: 'unavailable',
+      baseAssetCount: null, headAssetCount: 1,
+      baseRawBytes: null, headRawBytes: 50,
+      rawDeltaBytes: null, rawDeltaPercentage: null,
+      baseGzipBytes: null, headGzipBytes: 20,
+      gzipDeltaBytes: null, gzipDeltaPercentage: null,
+    },
+  ],
   diagnostics: [],
 }
 
@@ -41,7 +59,50 @@ describe('renderComment', () => {
     expect(comment).toContain('`base1234` → `head5678`')
     expect(comment).toContain('| `/checkout` | changed | 125 B | +25 B | +25.0% |')
     expect(comment).not.toContain('`/small`')
+    expect(comment).toContain('### Deferred client JS')
+    expect(comment).toContain(
+      '| `/checkout` | changed | 2 | 45 B | +15 B | +50.0% |',
+    )
+    expect(comment).not.toContain('`/new-lazy`')
     expect(comment).toContain('[Download head snapshot JSON](https://github.example/artifact/1)')
+  })
+
+  it('shows a head deferred size when the base metric is unavailable', () => {
+    const comment = renderComment({
+      diff: {
+        ...diff,
+        deferredRoutes: [diff.deferredRoutes[1]!],
+      },
+      evaluation: { status: 'pass', violations: [] },
+      artifactUrl: 'https://github.example/artifact/1',
+      topN: 1,
+    })
+
+    expect(comment).toContain(
+      '| `/new-lazy` | unavailable | 1 | 20 B | — | — |',
+    )
+  })
+
+  it('omits unavailable zero-sized deferred rows', () => {
+    const comment = renderComment({
+      diff: {
+        ...diff,
+        deferredRoutes: [{
+          path: '/legacy', status: 'unavailable',
+          baseAssetCount: null, headAssetCount: null,
+          baseRawBytes: null, headRawBytes: null,
+          rawDeltaBytes: null, rawDeltaPercentage: null,
+          baseGzipBytes: null, headGzipBytes: null,
+          gzipDeltaBytes: null, gzipDeltaPercentage: null,
+        }],
+      },
+      evaluation: { status: 'pass', violations: [] },
+      artifactUrl: 'https://github.example/artifact/1',
+      topN: 20,
+    })
+
+    expect(comment).not.toContain('### Deferred client JS')
+    expect(comment).not.toContain('`/legacy`')
   })
 
   it('explains an incompatible comparison', () => {
@@ -50,6 +111,7 @@ describe('renderComment', () => {
         ...diff,
         compatible: false,
         routes: [],
+        deferredRoutes: [],
         diagnostics: ['Route metrics are not compatible'],
       },
       evaluation: { status: 'skipped', violations: [] },

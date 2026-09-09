@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { downloadSnapshot } from '../adapters/github-artifact/download.js'
 import { snapshotArtifactName } from '../adapters/github-artifact/names.js'
 import {
-  selectExactArtifact,
+  selectVersionedArtifact,
   type RepositoryArtifact,
 } from '../adapters/github-artifact/select.js'
 import { GitHubCommentReporter } from '../adapters/github-comment/reporter.js'
@@ -132,14 +132,21 @@ export async function main(): Promise<void> {
     commitSha: pull.data.head.sha,
   })
 
-  const baseArtifactName = snapshotArtifactName(projectId, pull.data.base.sha)
-  const listed = await octokit.rest.actions.listArtifactsForRepo({
-    owner,
-    repo,
-    name: baseArtifactName,
-    per_page: 100,
-  })
-  const candidates: RepositoryArtifact[] = listed.data.artifacts.map((item) => {
+  const baseArtifactNames = [
+    snapshotArtifactName(projectId, pull.data.base.sha),
+    snapshotArtifactName(projectId, pull.data.base.sha, 1),
+  ]
+  const listed = await Promise.all(baseArtifactNames.map((name) =>
+    octokit.rest.actions.listArtifactsForRepo({
+      owner,
+      repo,
+      name,
+      per_page: 100,
+    }),
+  ))
+  const candidates: RepositoryArtifact[] = listed.flatMap(
+    (response) => response.data.artifacts,
+  ).map((item) => {
     const run = item.workflow_run
     const hasVerifiableRun =
       typeof run?.id === 'number' &&
@@ -161,8 +168,8 @@ export async function main(): Promise<void> {
         : {}),
     }
   })
-  const baseArtifact = selectExactArtifact(candidates, {
-    name: baseArtifactName,
+  const baseArtifact = selectVersionedArtifact(candidates, {
+    names: baseArtifactNames,
     sha: pull.data.base.sha,
     branch: pull.data.base.ref,
   })

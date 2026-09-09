@@ -11,7 +11,10 @@ Artifact로 저장합니다.
 
 - Next.js 버전이나 bundler 이름으로 분기하지 않고 실제 산출물의 manifest와
   capability를 확인합니다.
-- App Router, Pages Router, 혼합 구성과 Webpack, Turbopack을 처리합니다.
+- initial client JavaScript는 App Router, Pages Router, 혼합 구성과 Webpack,
+  Turbopack을 처리합니다.
+- App Router의 route별 deferred client JavaScript를 별도 관측합니다. Pages
+  Router의 deferred metric은 지원하지 않으며 `null`과 diagnostics로 표시합니다.
 - PR head와 정확한 base SHA를 비교합니다.
 - base snapshot이 없으면 실패하지 않고 head snapshot을 저장합니다.
 - 프로젝트별 gzip 절대 크기와 증가량 budget을 검사합니다.
@@ -151,7 +154,8 @@ budget을 완화할 수 없도록 하기 위한 경계입니다.
 
 - collect run에 `next-bundle-snapshot--...` Artifact가 생성됩니다.
 - report run이 성공합니다.
-- PR에 route별 gzip 크기와 base 대비 변화량 코멘트가 생성됩니다.
+- PR에 route별 initial gzip 크기와, 측정 가능한 경우 별도의
+  `Deferred client JS` 변화량 표가 생성됩니다.
 
 base snapshot이 아직 없으면 report는 성공 상태로 끝나고 비교를 생략했다는
 코멘트를 남깁니다. 해당 head snapshot은 이후 비교의 base로 재사용할 수
@@ -288,7 +292,7 @@ Artifact에는 `snapshot.json` 하나만 들어갑니다. 전체 `.next` 디렉�
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "metricDefinitionVersion": 1,
   "identity": {
     "repository": "acme/storefront",
@@ -303,10 +307,26 @@ Artifact에는 `snapshot.json` 하나만 들어갑니다. 전체 `.next` 디렉�
   "capabilities": [
     "asset.rawBytes.v1",
     "asset.gzipBytes.v1",
-    "route.initialAssets.v1"
+    "route.initialAssets.v1",
+    "route.deferredAssets.v1"
   ],
-  "assets": [],
-  "routes": [],
+  "assets": [
+    { "id": "static/chunks/app/page.js", "rawBytes": 10, "gzipBytes": 20 },
+    { "id": "static/chunks/chart.js", "rawBytes": 5, "gzipBytes": 15 }
+  ],
+  "routes": [{
+    "path": "/",
+    "initialAssets": ["static/chunks/app/page.js"],
+    "rawBytes": 10,
+    "gzipBytes": 20,
+    "routeSpecificRawBytes": 10,
+    "routeSpecificGzipBytes": 20,
+    "sharedRawBytes": 0,
+    "sharedGzipBytes": 0,
+    "deferredAssets": ["static/chunks/chart.js"],
+    "deferredRawBytes": 5,
+    "deferredGzipBytes": 15
+  }],
   "diagnostics": []
 }
 ```
@@ -317,11 +337,19 @@ Artifact에는 `snapshot.json` 하나만 들어갑니다. 전체 `.next` 디렉�
 - `capabilities`는 결과에 실제로 포함된 측정 능력입니다.
 - `routes[].rawBytes`와 `routes[].gzipBytes`는 initial client JavaScript의
   추정치입니다.
+- `route.deferredAssets.v1`이 있으면 `routes[].deferred*`는 route manifest가
+  직접 연결하는 initial 제외 client JavaScript의 중복 제거 합계입니다.
+  이 metric은 관측 전용이며 현재 budget 평가에는 사용하지 않습니다.
+- Pages Router route의 `deferredAssets`, `deferredRawBytes`,
+  `deferredGzipBytes`는 `null`입니다. 0은 “측정했지만 deferred asset이 없음”을
+  뜻하므로, 지원되지 않는 Pages 결과와 구분됩니다.
 - `diagnostics`는 완화 처리나 보정 내용을 기록합니다.
 
 외부 소비자는 모르는 필드를 무시하고, 사용하는 capability가 존재하는지
 확인해야 합니다. `route.initialAssets.v1`이 없으면 route 비교가 불가능한
-asset-only 결과일 수 있습니다. 입력 schema는 최대 5 MiB로 제한됩니다.
+asset-only 결과일 수 있습니다. report Action은 v2 baseline을 우선하고 기존
+v1 baseline으로 fallback하며, 이때 deferred 변화량은 `—`로 표시합니다. 입력
+schema는 최대 5 MiB로 제한됩니다.
 
 ## 비교 동작
 
@@ -330,12 +358,18 @@ asset-only 결과일 수 있습니다. 입력 schema는 최대 5 MiB로 제한�
 - 임의의 과거 ancestor로 fallback하지 않습니다.
 - 추가·삭제된 route를 구분하며 삭제된 route에는 budget을 적용하지 않습니다.
 - 기본적으로 gzip 절대 변화가 큰 route 20개를 표시합니다.
+- deferred 변화량은 별도 표로 표시하며 budget 판정에는 포함하지 않습니다.
 - 알 수 없는 Next.js 형식은 client chunk의 raw/gzip 정보만 저장하고 route
   연결을 추측하지 않습니다. `strict: true`면 대신 실패합니다.
 
 `route.initialAssets.v1`은 초기 문서가 참조하는 shared runtime, route chunk,
 polyfill을 합산합니다. gzip은 파일별 level 9 결과입니다. HTTP 전송 크기나
 runtime에서 늦게 불러오는 chunk 전체를 의미하지는 않습니다.
+
+`route.deferredAssets.v1`은 App Router route의 React loadable manifest가
+증명하는 JavaScript 중 initial set을 제외한 합집합입니다. 사용자 상호작용
+시점이나 실제 네트워크 전송 순서를 추측하지 않으며, Pages Router에는 이
+연결 근거를 제공하지 않습니다.
 
 ## 지원하는 산출물
 
@@ -345,10 +379,15 @@ runtime에서 늦게 불러오는 chunk 전체를 의미하지는 않습니다.
 - App Router Webpack route 및 client-reference manifest
 - Turbopack의 opaque chunk 이름을 포함한 Next.js route bundle diagnostics
 - App Router와 Pages Router 혼합 프로젝트
+- App Router Webpack/Turbopack의 route별 deferred client JavaScript
+- Pages Router의 deferred client JavaScript는 **지원하지 않음**
 - 미래 또는 알 수 없는 형식의 asset-only graceful degradation
 
 실제 Next.js 16.2.3의 Webpack과 Turbopack build로 검증했습니다. 조사 내용은
 [Next.js build output research](docs/research/next-16.2.3-webpack.md)에 있습니다.
+Dynamic import 조사는
+[deferred client JavaScript research](docs/research/next-16.2.3-deferred-client-js.md)에
+별도로 기록했습니다.
 
 ## 문제 해결
 

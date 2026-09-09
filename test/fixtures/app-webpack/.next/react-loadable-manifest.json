@@ -1,0 +1,6 @@
+{
+  "app/dashboard/deferred-loader.tsx -> ./deferred-dashboard": {
+    "id": 41,
+    "files": ["static/chunks/deferred-dashboard.js"]
+  }
+}

@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1 as const
+export const SCHEMA_VERSION = 2 as const
 export const METRIC_DEFINITION_VERSION = 1 as const
 
 export interface SnapshotIdentity {
@@ -16,6 +16,7 @@ export interface AssetFact {
 export interface CollectedRoute {
   path: string
   initialAssets: string[]
+  deferredAssets: string[] | null
 }
 
 export interface CollectedBuild {
@@ -37,10 +38,12 @@ export interface RouteSnapshot extends CollectedRoute {
   routeSpecificGzipBytes: number
   sharedRawBytes: number
   sharedGzipBytes: number
+  deferredRawBytes: number | null
+  deferredGzipBytes: number | null
 }
 
 export interface BundleSnapshot {
-  schemaVersion: typeof SCHEMA_VERSION
+  schemaVersion: 1 | typeof SCHEMA_VERSION
   metricDefinitionVersion: typeof METRIC_DEFINITION_VERSION
   identity: SnapshotIdentity
   environment: CollectedBuild['environment']
@@ -51,6 +54,7 @@ export interface BundleSnapshot {
 }
 
 export type RouteChangeStatus = 'changed' | 'added' | 'removed' | 'unchanged'
+export type DeferredRouteChangeStatus = RouteChangeStatus | 'unavailable'
 
 export interface RouteDiff {
   path: string
@@ -65,11 +69,27 @@ export interface RouteDiff {
   gzipDeltaPercentage: number | null
 }
 
+export interface DeferredRouteDiff {
+  path: string
+  status: DeferredRouteChangeStatus
+  baseAssetCount: number | null
+  headAssetCount: number | null
+  baseRawBytes: number | null
+  headRawBytes: number | null
+  rawDeltaBytes: number | null
+  rawDeltaPercentage: number | null
+  baseGzipBytes: number | null
+  headGzipBytes: number | null
+  gzipDeltaBytes: number | null
+  gzipDeltaPercentage: number | null
+}
+
 export interface BundleDiff {
   compatible: boolean
   base: SnapshotIdentity
   head: SnapshotIdentity
   routes: RouteDiff[]
+  deferredRoutes: DeferredRouteDiff[]
   diagnostics: string[]
 }
 

@@ -14,6 +14,7 @@ function safePart(value: string): string {
 export function snapshotArtifactName(
   projectId: string,
   commitSha: string,
+  schemaVersion: 1 | typeof SCHEMA_VERSION = SCHEMA_VERSION,
 ): string {
-  return `next-bundle-snapshot--${projectKey(projectId)}--${safePart(commitSha)}--v${SCHEMA_VERSION}`
+  return `next-bundle-snapshot--${projectKey(projectId)}--${safePart(commitSha)}--v${schemaVersion}`
 }

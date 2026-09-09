@@ -17,13 +17,19 @@ An architecture test checks these dependency directions.
 ## Contracts
 
 `CollectedBuild` contains environment evidence, capabilities, measured assets,
-route-to-initial-asset associations, and diagnostics. It deliberately excludes
-GitHub concepts.
+route-to-initial-asset associations, optional route-to-deferred-asset
+associations, and diagnostics. It deliberately excludes GitHub concepts.
 
 `BundleSnapshot` adds identity and pure analysis results. Its top-level
 `schemaVersion` controls storage compatibility. `metricDefinitionVersion`
 controls comparison compatibility. Capability identifiers allow partial results
 without pretending that missing route evidence is available.
+
+Schema v2 adds nullable deferred route fields. App Router collectors emit
+`route.deferredAssets.v1` only when loadable manifests prove the association;
+Pages Router routes keep those fields `null` and emit a diagnostic. An empty
+array means the metric was supported and no deferred asset was found. Deferred
+assets are observational and do not participate in budget evaluation.
 
 `BundleDiff` and `Evaluation` never read files or call GitHub. That makes the
 same analysis reusable by future dashboard or API delivery adapters without
@@ -42,9 +48,9 @@ therefore:
 6. fetches optional policy configuration from the exact base SHA;
 7. escapes route strings before rendering Markdown.
 
-The exact base Artifact is selected by name, workflow SHA, branch, expiration,
-and newest creation time. A missing baseline is data absence, not a build
-failure.
+The exact base Artifact is selected by schema preference, name, workflow SHA,
+branch, expiration, and newest creation time. Reporting prefers schema v2 and
+falls back to schema v1. A missing baseline is data absence, not a build failure.
 
 ## Adding a Next.js format
 

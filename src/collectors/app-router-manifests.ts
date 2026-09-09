@@ -7,6 +7,10 @@ import type {
   CollectedBuild,
   CollectedRoute,
 } from '../contracts/index.js'
+import {
+  collectAppDeferredAssets,
+  type AppRouteEvidence,
+} from './app-deferred-assets.js'
 import { readBuildEnvironment } from './environment.js'
 
 interface BuildManifest {
@@ -95,6 +99,7 @@ export async function collectAppRouterBuild(
   ].filter((asset) => asset.endsWith('.js'))
 
   const routes: CollectedRoute[] = []
+  const routeEvidence: AppRouteEvidence[] = []
   for (const [internalRoute, publicRoute] of Object.entries(routeMap)) {
     if (typeof publicRoute !== 'string') {
       throw new Error(`Invalid public route for ${internalRoute}`)
@@ -118,15 +123,30 @@ export async function collectAppRouterBuild(
       },
     )
 
+    const initialAssets = [
+      ...new Set([...roots, ...routeAssets.map(decodeAssetId)]),
+    ]
     routes.push({
       path: publicRoute,
-      initialAssets: [
-        ...new Set([...roots, ...routeAssets.map(decodeAssetId)]),
-      ],
+      initialAssets,
+      deferredAssets: [],
+    })
+    routeEvidence.push({
+      internalRoute,
+      publicRoute,
+      initialAssets,
+      clientModules: manifest.clientModules ?? {},
     })
   }
 
-  const assetIds = [...new Set(routes.flatMap((route) => route.initialAssets))]
+  const deferred = await collectAppDeferredAssets(buildPath, routeEvidence)
+  for (const route of routes) {
+    route.deferredAssets = deferred.byRoute.get(route.path) ?? []
+  }
+  const assetIds = [...new Set(routes.flatMap((route) => [
+    ...route.initialAssets,
+    ...(route.deferredAssets ?? []),
+  ]))]
   const assets: AssetFact[] = await Promise.all(
     assetIds.map(async (id) => {
       const content = await readFile(safeAssetPath(buildPath, id))
@@ -144,6 +164,7 @@ export async function collectAppRouterBuild(
       'asset.rawBytes.v1',
       'asset.gzipBytes.v1',
       'route.initialAssets.v1',
+      'route.deferredAssets.v1',
     ],
     assets,
     routes,
